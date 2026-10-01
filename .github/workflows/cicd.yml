@@ -1,0 +1,39 @@
+name: ML CI/CD Pipeline
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  # ==================== CI STAGE ====================
+  ci:
+    name: CI — Build, Train & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Train and run the ML model
+        run: python model.py
+      - name: Execute test cases
+        run: pytest test_model.py -v
+  # ==================== CD STAGE ====================
+  cd:
+    name: CD — Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: ci  # CD runs only when CI passes
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
